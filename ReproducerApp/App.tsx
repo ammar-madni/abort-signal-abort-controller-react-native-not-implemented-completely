@@ -5,7 +5,7 @@
  * @format
  */
 
-import React, {useState} from 'react';
+import React from 'react';
 import type {PropsWithChildren} from 'react';
 import {
   ScrollView,
@@ -51,9 +51,6 @@ function Section({children, title}: SectionProps): React.JSX.Element {
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
-  const [result, setResult] = useState<string>(
-    'Press button to test AbortSignal.throwIfAborted()',
-  );
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
@@ -64,15 +61,27 @@ function App(): React.JSX.Element {
     const signal = controller.signal;
 
     console.log('Creating AbortController and signal...');
-
     controller.abort();
     console.log('Controller aborted');
 
     console.log('Attempting to call signal.throwIfAborted()...');
+    // @ts-ignore - Testing if method exists at runtime
     signal.throwIfAborted();
 
     console.log('Failed: signal.throwIfAborted() did not throw after abort');
-    setResult('Failed: signal.throwIfAborted() did not throw after abort');
+  };
+
+  const testAbortSignalAny = () => {
+    console.log('Testing AbortSignal.any...');
+
+    const controller1 = new AbortController();
+    const controller2 = new AbortController();
+
+    // @ts-ignore - Testing if method exists at runtime
+    const anySignal = AbortSignal.any([controller1.signal, controller2.signal]);
+    console.log('Signal aborted:', anySignal.aborted);
+
+    console.log('AbortSignal.any seems to work');
   };
 
   return (
@@ -91,21 +100,27 @@ function App(): React.JSX.Element {
             padding: 24,
           }}>
           <Section title="React Native AbortSignal Test">
-            This app demonstrates that AbortSignal.throwIfAborted() is not
+            This app demonstrates that certain AbortSignal methods are not
             implemented in React Native.
           </Section>
 
           <View style={styles.testContainer}>
-            <Text style={styles.result}>{result}</Text>
             <Text style={styles.note}>
-              When you click the button below, the app will try to use
-              AbortSignal.throwIfAborted(). If this method is not implemented,
-              you'll see a red error screen or an error in the console.
+              When you click the buttons below, the app will try to use
+              AbortSignal methods. If these methods are not implemented, you'll
+              see a red error screen or an error in the console.
             </Text>
 
             <Button
-              title="Test AbortSignal.throwIfAborted()"
+              title="Test signal.throwIfAborted()"
               onPress={testAbortSignalThrowIfAborted}
+            />
+
+            <View style={styles.buttonSpacer} />
+
+            <Button
+              title="Test AbortSignal.any()"
+              onPress={testAbortSignalAny}
             />
           </View>
         </View>
@@ -135,16 +150,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 24,
   },
-  result: {
-    fontSize: 16,
-    marginBottom: 16,
-    fontWeight: '500',
-  },
   note: {
     fontStyle: 'italic',
     fontSize: 14,
     color: '#666',
     marginBottom: 16,
+  },
+  buttonSpacer: {
+    height: 16,
   },
 });
 
