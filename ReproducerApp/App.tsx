@@ -5,7 +5,7 @@
  * @format
  */
 
-import React from 'react';
+import React, {useState} from 'react';
 import type {PropsWithChildren} from 'react';
 import {
   ScrollView,
@@ -14,15 +14,10 @@ import {
   Text,
   useColorScheme,
   View,
+  Button,
 } from 'react-native';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import {Colors, Header} from 'react-native/Libraries/NewAppScreen';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -56,21 +51,29 @@ function Section({children, title}: SectionProps): React.JSX.Element {
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
+  const [result, setResult] = useState<string>(
+    'Press button to test AbortSignal.throwIfAborted()',
+  );
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
-  /*
-   * To keep the template simple and small we're adding padding to prevent view
-   * from rendering under the System UI.
-   * For bigger apps the recommendation is to use `react-native-safe-area-context`:
-   * https://github.com/AppAndFlow/react-native-safe-area-context
-   *
-   * You can read more about it here:
-   * https://github.com/react-native-community/discussions-and-proposals/discussions/827
-   */
-  const safePadding = '5%';
+  const testAbortSignalThrowIfAborted = () => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    console.log('Creating AbortController and signal...');
+
+    controller.abort();
+    console.log('Controller aborted');
+
+    console.log('Attempting to call signal.throwIfAborted()...');
+    signal.throwIfAborted();
+
+    console.log('Failed: signal.throwIfAborted() did not throw after abort');
+    setResult('Failed: signal.throwIfAborted() did not throw after abort');
+  };
 
   return (
     <View style={backgroundStyle}>
@@ -79,30 +82,32 @@ function App(): React.JSX.Element {
         backgroundColor={backgroundStyle.backgroundColor}
       />
       <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
-        <View style={{paddingRight: safePadding}}>
-          <Header/>
-        </View>
+        <Header />
         <View
           style={{
             backgroundColor: isDarkMode ? Colors.black : Colors.white,
-            paddingHorizontal: safePadding,
-            paddingBottom: safePadding,
+            padding: 24,
           }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
+          <Section title="React Native AbortSignal Test">
+            This app demonstrates that AbortSignal.throwIfAborted() is not
+            implemented in React Native.
           </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+
+          <View style={styles.testContainer}>
+            <Text style={styles.result}>{result}</Text>
+            <Text style={styles.note}>
+              When you click the button below, the app will try to use
+              AbortSignal.throwIfAborted(). If this method is not implemented,
+              you'll see a red error screen or an error in the console.
+            </Text>
+
+            <Button
+              title="Test AbortSignal.throwIfAborted()"
+              onPress={testAbortSignalThrowIfAborted}
+            />
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -112,19 +117,34 @@ function App(): React.JSX.Element {
 const styles = StyleSheet.create({
   sectionContainer: {
     marginTop: 32,
-    paddingHorizontal: 24,
+    marginBottom: 32,
   },
   sectionTitle: {
     fontSize: 24,
     fontWeight: '600',
+    marginBottom: 8,
   },
   sectionDescription: {
-    marginTop: 8,
     fontSize: 18,
     fontWeight: '400',
   },
-  highlight: {
-    fontWeight: '700',
+  testContainer: {
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    marginBottom: 24,
+  },
+  result: {
+    fontSize: 16,
+    marginBottom: 16,
+    fontWeight: '500',
+  },
+  note: {
+    fontStyle: 'italic',
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
   },
 });
 
